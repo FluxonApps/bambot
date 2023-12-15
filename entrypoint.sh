@@ -1,6 +1,4 @@
-#!/bin/bash
-
-. /root/.nvm/nvm.sh
+#!/bin/sh
 
 cd /bot/bambot
 npm run invoke

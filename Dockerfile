@@ -1,17 +1,9 @@
-FROM debian:bookworm-slim
+FROM node:18-alpine
 
-SHELL ["/bin/bash", "--login", "-c"]
+RUN mkdir -p /bot/bambot
 
-RUN apt update && yes | apt install git curl
-
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-RUN nvm install 10
-
-RUN mkdir /bot && cd bot && git clone https://github.com/FluxonApps/bambot
-
+COPY . /bot/bambot/
 RUN cd /bot/bambot && npm install
+RUN chmod a+x /bot/bambot/entrypoint.sh
 
-COPY entrypoint.sh /bot
-RUN chmod a+x /bot/entrypoint.sh
-
-ENTRYPOINT [ "/bot/entrypoint.sh" ]
+ENTRYPOINT [ "/bot/bambot/entrypoint.sh" ]

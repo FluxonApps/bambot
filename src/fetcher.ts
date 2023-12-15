@@ -1,4 +1,3 @@
-import { TaskQueue } from "cwait"
 import dayjs from "dayjs"
 import { Day, Emp, WhosOut } from "."
 import { getJson, getXml } from "./http"
@@ -9,6 +8,8 @@ const YMD_FORMAT = "YYYY-MM-DD"
 const BASE_URL = `https://${getEnv(
   "BAMBOOHR_KEY"
 )}:x@api.bamboohr.com/api/gateway.php/${getEnv("BAMBOOHR_SUBDOMAIN")}/v1`
+
+const queue = new (require('cwait').TaskQueue)(Promise, CONCURRENCY);
 
 export const employees = async (): Promise<Emp[]> =>
   await Promise.all<Emp>(
@@ -21,7 +22,7 @@ export const employees = async (): Promise<Emp[]> =>
         photoUrl: e.photoUrl,
       }))
       .map(
-        new TaskQueue(Promise, CONCURRENCY).wrap<Emp, EmpRes>(async (e) => {
+        queue.wrap(async (e: EmpRes) => {
           const m = await getJson<EmpByIdRes>(
             `${BASE_URL}/employees/${e.id}?fields=birthday,hireDate`
           )
@@ -45,21 +46,21 @@ export const holidaysAndTimeOff = async (today: Day): Promise<WhosOut> => {
   ).calendar.item
   return is
     ? is.reduce((res, i) => {
-        if (i.$.type === "holiday" && i.holiday) {
-          res.holidays.push({ name: i.holiday[0]._, date: dayjs(i.start[0]) })
-        } else if (i.$.type === "timeOff" && i.employee) {
-          const id = i.employee[0].$.id
-          const obj = {
-            endDate: dayjs(i.end[0]),
-            id,
-            startDate: dayjs(i.start[0]),
-          }
-          res.timeOff[id]
-            ? res.timeOff[id].push(obj)
-            : (res.timeOff[id] = [obj])
+      if (i.$.type === "holiday" && i.holiday) {
+        res.holidays.push({ name: i.holiday[0]._, date: dayjs(i.start[0]) })
+      } else if (i.$.type === "timeOff" && i.employee) {
+        const id = i.employee[0].$.id
+        const obj = {
+          endDate: dayjs(i.end[0]),
+          id,
+          startDate: dayjs(i.start[0]),
         }
-        return res
-      }, empty)
+        res.timeOff[id]
+          ? res.timeOff[id].push(obj)
+          : (res.timeOff[id] = [obj])
+      }
+      return res
+    }, empty)
     : empty
 }
 

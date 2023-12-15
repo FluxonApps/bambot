@@ -2,7 +2,7 @@ service: ${file(./package.json):name}
 
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: nodejs18.x
   region: us-west-2
   stage: ${env:ENVIRONMENT}
   timeout: 30
