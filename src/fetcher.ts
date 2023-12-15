@@ -25,7 +25,7 @@ export const employees = async (): Promise<Emp[]> =>
         queue.wrap(async (e: EmpRes) => {
           const m = await getJson<EmpByIdRes>(
             `${BASE_URL}/employees/${e.id}?fields=birthday,hireDate`
-          )
+          );
           return {
             ...e,
             birthday: dayjs(m.birthday),
@@ -44,6 +44,7 @@ export const holidaysAndTimeOff = async (today: Day): Promise<WhosOut> => {
         .format(YMD_FORMAT)}`
     )
   ).calendar.item
+  console.log(JSON.stringify(is, null, 2));
   return is
     ? is.reduce((res, i) => {
       if (i.$.type === "holiday" && i.holiday) {
